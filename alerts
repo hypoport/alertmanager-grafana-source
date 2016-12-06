@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+while getopts ":-:" options; do 
+  unset VALUE
+  if [[ ${!OPTIND} =~ ^-$ ]] || [[ ${!OPTIND} =~ ^[^-] ]];then
+    VALUE="${!OPTIND}"; OPTIND=$((OPTIND+1))
+  fi
+  case $options in
+  *) case "$OPTARG" in
+      a|alertmanager) alertmanager_host="$VALUE" ;;
+esac; esac; done; shift $((OPTIND-1))
+
+: ${alertmanager_host:="http://alertmanager:9093"}
+
+TIMEZONE_CORRECTION="-3600"
+
+alertmanager_alerts="$( curl -s "${alertmanager_host}/api/v1/alerts/groups" \
+  | jq -r '.data[]?' \
+  | jq -c '.blocks[0]?//empty' \
+  | jq -c ".alerts[0]|[(.startsAt|gsub(\"\\\\.[0-9]*Z\$\";\"\")|strptime(\"%Y-%m-%dT%H:%M:%S\")|(mktime + ${TIMEZONE_CORRECTION})*1000),.labels.alertname]" \
+  | jq -s -c '.')"
+
+echo "[
+  {
+    \"columns\": [
+      { \"text\": \"Time\", \"type\": \"time\", \"sort\": true, \"desc\": true },
+      { \"text\": \"alert_name\", \"type\":\"text\" }
+    ],
+    \"rows\": ${alertmanager_alerts}, 
+    \"type\": \"table\"
+  }
+]
+"
+
