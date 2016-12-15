@@ -7,4 +7,5 @@ RUN rm -rf /handlers && mkdir -p /handlers
 ADD query /handlers/query
 ADD search /handlers/search
 ADD annotations /handlers/annotations
+ADD default /handlers/default
 
