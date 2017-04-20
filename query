@@ -10,7 +10,7 @@ while getopts ":-:" options; do
       a|alertmanager) alertmanager_host="$VALUE" ;;
 esac; esac; done; shift $((OPTIND-1))
 
-: ${alertmanager_host:="http://alertmanager:9093"}
+: ${alertmanager_host:="http://monitoring.ep2.hypoport.local:9093"}
 
 alertmanager_alerts="$( curl -s "${alertmanager_host}/api/v1/alerts/groups" \
   | jq -r '.data[]?' \
